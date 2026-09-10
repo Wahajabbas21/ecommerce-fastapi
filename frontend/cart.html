@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - E-Commerce</title>
+    <style>
+        body { font-family: system-ui; background-color: #f7f8fa; padding: 20px; }
+        nav { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #ddd; }
+        nav a { margin-right: 15px; text-decoration: none; color: #1f2937; font-weight: bold; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; padding: 15px 0; }
+        .cart-total { font-size: 1.2em; font-weight: bold; text-align: right; margin-top: 20px; }
+        .checkout-btn { background-color: #15803d; color: white; border: none; padding: 12px; width: 100%; border-radius: 4px; cursor: pointer; font-size: 1em; font-weight: bold; margin-top: 20px; text-align: center; display: block; text-decoration: none; box-sizing: border-box; }
+        .checkout-btn:hover { background-color: #166534; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="cart.html">Cart</a>
+        <a href="orders.html">My Orders</a>
+        <a href="#" onclick="logout()">Logout</a>
+    </nav>
+
+    <div class="container">
+        <h2>Shopping Cart</h2>
+        <div id="cart-items">Loading cart...</div>
+        <div id="cart-total" class="cart-total">Total: Rs. 0</div>
+        <a href="checkout.html" class="checkout-btn">Proceed to Checkout</a>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/cart.js"></script>
+    <script>
+        function logout() {
+            localStorage.removeItem("access_token");
+            window.location.href = "login.html";
+        }
+    </script>
+</body>
+</html>

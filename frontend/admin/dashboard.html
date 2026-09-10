@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Admin Portal</title>
+    <link rel="stylesheet" href="../assets/css/base.css">
+    <link rel="stylesheet" href="../assets/css/components.css">
+</head>
+<body>
+    <div class="admin-layout" style="display: flex;">
+        <!-- Sidebar Navigation -->
+        <aside style="width: 250px; background: #1f2937; color: white; min-height: 100vh; padding: 20px;">
+            <h2>Admin Portal</h2>
+            <ul style="list-style: none; padding: 0; margin-top: 20px;">
+                <li style="margin-bottom: 10px;"><a href="dashboard.html" style="color: white; text-decoration: none; font-weight: bold;">Dashboard</a></li>
+                <li style="margin-bottom: 10px;"><a href="products.html" style="color: white; text-decoration: none;">Products</a></li>
+                <li style="margin-bottom: 10px;"><a href="inventory.html" style="color: white; text-decoration: none;">Inventory</a></li>
+                <li style="margin-bottom: 10px;"><a href="orders.html" style="color: white; text-decoration: none;">Orders</a></li>
+                <li style="margin-top: 30px;"><button id="logout-btn" style="background: #dc2626; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">Logout</button></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main style="flex: 1; padding: 30px; background: #f7f8fa;">
+            <h1>Admin Dashboard</h1>
+            <div id="error-message" style="color: red; margin-bottom: 15px; display: none;"></div>
+
+            <!-- Metrics Cards Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-top: 20px;">
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <h3 style="color: #6b7280; font-size: 14px; margin-bottom: 8px;">Total Revenue</h3>
+                    <p id="total-revenue" style="font-size: 24px; font-weight: bold; color: #111827;">PKR 0</p>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <h3 style="color: #6b7280; font-size: 14px; margin-bottom: 8px;">Total Orders</h3>
+                    <p id="total-orders" style="font-size: 24px; font-weight: bold; color: #111827;">0</p>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <h3 style="color: #6b7280; font-size: 14px; margin-bottom: 8px;">Total Products</h3>
+                    <p id="total-products" style="font-size: 24px; font-weight: bold; color: #111827;">0</p>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <h3 style="color: #6b7280; font-size: 14px; margin-bottom: 8px;">Low Stock Items (< 5)</h3>
+                    <p id="low-stock-count" style="font-size: 24px; font-weight: bold; color: #dc2626;">0</p>
+                </div>
+            </div>
+
+            <!-- Low Stock Alert Section -->
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-top: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <h3>Low Stock Inventory Warning</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                    <thead>
+                        <tr style="background: #e5e7eb; text-align: left;">
+                            <th style="padding: 12px;">ID</th>
+                            <th style="padding: 12px;">Product Name</th>
+                            <th style="padding: 12px;">Remaining Stock</th>
+                            <th style="padding: 12px;">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody id="low-stock-table-body">
+                        <tr>
+                            <td colspan="4" style="padding: 15px; text-align: center;">Checking stock levels...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Configuration and API scripts -->
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", async function() {
+            const token = localStorage.getItem("access_token");
+            if (!token) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            await loadDashboardData();
+        });
+
+        async function loadDashboardData() {
+            try {
+                // Fetch products and orders concurrently
+                const [products, orders] = await Promise.all([
+                    apiRequest("/products/"),
+                    apiRequest("/orders/admin/all")
+                ]);
+
+                // 1. Calculate Total Products
+                const totalProducts = products ? products.length : 0;
+                document.getElementById("total-products").textContent = totalProducts;
+
+                // 2. Calculate Total Orders & Revenue
+                const totalOrders = orders ? orders.length : 0;
+                document.getElementById("total-orders").textContent = totalOrders;
+
+                let totalRevenue = 0;
+                if (orders) {
+                    orders.forEach(order => {
+                        if (order.status !== 'cancelled') {
+                            totalRevenue += (order.total_price || 0);
+                        }
+                    });
+                }
+                document.getElementById("total-revenue").textContent = `PKR ${totalRevenue.toLocaleString()}`;
+
+                // 3. Filter Low Stock Items (Stock < 5)
+                const lowStockProducts = products ? products.filter(p => (p.stock ?? 0) < 5) : [];
+                document.getElementById("low-stock-count").textContent = lowStockProducts.length;
+
+                const lowStockTbody = document.getElementById("low-stock-table-body");
+                lowStockTbody.innerHTML = "";
+
+                if (lowStockProducts.length === 0) {
+                    lowStockTbody.innerHTML = `<tr><td colspan="4" style="padding: 15px; text-align: center; color: #16a34a;">All products are sufficiently stocked!</td></tr>`;
+                } else {
+                    lowStockProducts.forEach(product => {
+                        const tr = document.createElement("tr");
+                        tr.style.borderBottom = "1px solid #e5e7eb";
+                        tr.innerHTML = `
+                            <td style="padding: 12px;">#${product.id}</td>
+                            <td style="padding: 12px;">${product.name}</td>
+                            <td style="padding: 12px; font-weight: bold; color: #dc2626;">${product.stock ?? 0}</td>
+                            <td style="padding: 12px;">PKR ${product.price}</td>
+                        `;
+                        lowStockTbody.appendChild(tr);
+                    });
+                }
+
+            } catch (error) {
+                console.error("Error loading dashboard metrics:", error);
+                document.getElementById("error-message").textContent = error.message || "Failed to load dashboard metrics";
+                document.getElementById("error-message").style.display = "block";
+            }
+        }
+
+        document.getElementById("logout-btn").addEventListener("click", function() {
+            localStorage.removeItem("access_token");
+            window.location.href = "login.html";
+        });
+    </script>
+</body>
+</html>

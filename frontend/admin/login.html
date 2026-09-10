@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - E-Commerce Store</title>
+    <link rel="stylesheet" href="../assets/css/base.css">
+    <link rel="stylesheet" href="../assets/css/components.css">
+</head>
+<body>
+    <div class="container" style="max-width: 400px; margin-top: 100px;">
+        <h2>Admin Portal Login</h2>
+        
+        <!-- Error message container -->
+        <div id="error-message" style="color: red; margin-bottom: 15px; display: none;"></div>
+
+        <form id="admin-login-form">
+            <div style="margin-bottom: 15px;">
+                <label for="email">Admin Email</label><br>
+                <input type="email" id="email" required style="width: 100%; padding: 8px; margin-top: 5px;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label for="password">Password</label><br>
+                <input type="password" id="password" required style="width: 100%; padding: 8px; margin-top: 5px;">
+            </div>
+            <button type="submit" style="width: 100%; padding: 10px; background-color: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Login as Admin
+            </button>
+        </form>
+    </div>
+
+    <!-- Configuration and API helper scripts -->
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        /**
+         * Handle Admin Login Form Submission
+         * Authenticates admin credentials and stores the access token securely.
+         */
+        document.getElementById("admin-login-form").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const errorDiv = document.getElementById("error-message");
+            
+            errorDiv.style.display = "none";
+            errorDiv.textContent = "";
+
+            try {
+                // Ensure API_BASE_URL is defined
+                if (typeof API_BASE_URL === "undefined") {
+                    throw new Error("API_BASE_URL is not defined in config.js");
+                }
+
+                // Prepare form data as required by OAuth2 password flow
+                const formData = new URLSearchParams();
+                formData.append("username", email);
+                formData.append("password", password);
+
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: formData
+                });
+
+                // Check if response is JSON before parsing
+                const contentType = response.headers.get("content-type");
+                let data = {};
+                if (contentType && contentType.includes("application/json")) {
+                    data = await response.json();
+                }
+
+                if (!response.ok) {
+                    throw new Error(data.detail || `Server error: ${response.status} ${response.statusText}`);
+                }
+
+                // Store access token in localStorage
+                localStorage.setItem("access_token", data.access_token);
+
+                // Redirect to Admin Dashboard upon successful authentication
+                window.location.href = "dashboard.html";
+
+            } catch (error) {
+                console.error("Admin Login Error:", error);
+                errorDiv.textContent = error.message || "Failed to connect to the server.";
+                errorDiv.style.display = "block";
+            }
+        });
+    </script>
+</body>
+</html>

@@ -6,6 +6,9 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     app_env: str = "development"
     database_url: str
+    jwt_secret_key: str
+    ai_api_key: str = ""
+    ai_model_name: str = "gemini-3-flash-preview"
     cors_origins: list[str] = [
         "http://127.0.0.1:5500",
         "http://localhost:5500",

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders - E-Commerce</title>
+    <style>
+        body { font-family: system-ui; background-color: #f7f8fa; padding: 20px; margin: 0; }
+        nav { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #ddd; }
+        nav a { margin-right: 15px; text-decoration: none; color: #1f2937; font-weight: bold; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .order-card { border: 1px solid #e5e7eb; border-radius: 6px; padding: 15px; margin-bottom: 15px; background: #fff; }
+        .order-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; color: #374151; }
+        .status { padding: 4px 8px; border-radius: 4px; font-size: 0.85em; background: #e0e7ff; color: #3730a3; }
+        .price { color: #2563eb; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="cart.html">Cart</a>
+        <a href="orders.html">My Orders</a>
+        <a href="#" onclick="logout()">Logout</a>
+    </nav>
+
+    <div class="container">
+        <h2>My Order History</h2>
+        <div id="orders-container">Loading orders...</div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        async function fetchOrders() {
+            const container = document.getElementById("orders-container");
+
+            if (!localStorage.getItem("access_token")) {
+                container.innerHTML = "<p>Please <a href='login.html'>login</a> to view your orders.</p>";
+                return;
+            }
+
+            try {
+                const orders = await apiRequest("/orders/");
+
+                if (!orders || orders.length === 0) {
+                    container.innerHTML = "<p>You have not placed any orders yet.</p>";
+                    return;
+                }
+
+                container.innerHTML = "";
+                orders.forEach(order => {
+                    const orderDiv = document.createElement("div");
+                    orderDiv.className = "order-card";
+                    
+                    // Fallbacks handle karne ke liye safe checks
+                    const orderId = order.id || "N/A";
+                    const orderStatus = order.status || "Pending";
+                    const orderTotal = order.grand_total || order.total_price || 0;
+                    const shippingAddress = order.shipping_address || order.address || "Not provided";
+                    const phoneNumber = order.phone_number || order.phone || "Not provided";
+
+                    orderDiv.innerHTML = `
+                        <div class="order-header">
+                            <span>Order #${orderId}</span>
+                            <span class="status">${orderStatus}</span>
+                        </div>
+                        <p><strong>Total:</strong> <span class="price">Rs. ${orderTotal}</span></p>
+                        <p><strong>Address:</strong> ${shippingAddress}</p>
+                        <p><strong>Phone:</strong> ${phoneNumber}</p>
+                    `;
+                    container.appendChild(orderDiv);
+                });
+
+            } catch (error) {
+                container.innerHTML = `<p style="color: red;">Failed to load orders: ${error.message}</p>`;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem("access_token");
+            window.location.href = "login.html";
+        }
+
+        fetchOrders();
+    </script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Categories - Admin Portal</title>
+    <link rel="stylesheet" href="../assets/css/base.css">
+    <link rel="stylesheet" href="../assets/css/components.css">
+</head>
+<body>
+    <div class="admin-layout" style="display: flex;">
+        <!-- Sidebar Navigation -->
+        <aside style="width: 250px; background: #1f2937; color: white; min-height: 100vh; padding: 20px;">
+            <h2>Admin Portal</h2>
+            <ul style="list-style: none; padding: 0; margin-top: 20px;">
+                <li style="margin-bottom: 10px;"><a href="dashboard.html" style="color: white; text-decoration: none;">Dashboard</a></li>
+                <li style="margin-bottom: 10px;"><a href="categories.html" style="color: white; text-decoration: none; font-weight: bold;">Categories</a></li>
+                <li style="margin-bottom: 10px;"><a href="brands.html" style="color: white; text-decoration: none;">Brands</a></li>
+                <li style="margin-bottom: 10px;"><a href="products.html" style="color: white; text-decoration: none;">Products</a></li>
+                <li style="margin-bottom: 10px;"><a href="inventory.html" style="color: white; text-decoration: none;">Inventory</a></li>
+                <li style="margin-bottom: 10px;"><a href="orders.html" style="color: white; text-decoration: none;">Orders</a></li>
+                <li style="margin-top: 30px;"><button id="logout-btn" style="background: #dc2626; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">Logout</button></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main style="flex: 1; padding: 30px; background: #f7f8fa;">
+            <h1>Manage Categories</h1>
+            <div id="error-message" style="color: red; margin-bottom: 15px; display: none;"></div>
+
+            <!-- Add Category Form -->
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-top: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <h3>Add New Category</h3>
+                <form id="add-category-form" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div>
+                        <label>Category Name</label><br>
+                        <input type="text" id="name" required style="width: 100%; padding: 8px; margin-top: 5px;">
+                    </div>
+                    <div>
+                        <label>Slug</label><br>
+                        <input type="text" id="slug" required style="width: 100%; padding: 8px; margin-top: 5px;">
+                    </div>
+                    <div style="grid-column: span 2;">
+                        <button type="submit" style="padding: 10px 20px; background-color: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer;">Create Category</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Categories List Table -->
+            <table style="width: 100%; border-collapse: collapse; background: white; margin-top: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <thead>
+                    <tr style="background: #e5e7eb; text-align: left;">
+                        <th style="padding: 12px;">ID</th>
+                        <th style="padding: 12px;">Name</th>
+                        <th style="padding: 12px;">Slug</th>
+                    </tr>
+                </thead>
+                <tbody id="categories-table-body">
+                    <tr>
+                        <td colspan="3" style="padding: 15px; text-align: center;">Loading categories...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </main>
+    </div>
+
+    <!-- Configuration and API scripts -->
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        /**
+         * Fetch and Render Categories for Admin Management
+         */
+        document.addEventListener("DOMContentLoaded", async function() {
+            const token = localStorage.getItem("access_token");
+            if (!token) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            await loadCategories(token);
+        });
+
+        async function loadCategories(token) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/categories/`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error("Failed to load categories");
+
+                const categories = await response.json();
+                const tbody = document.getElementById("categories-table-body");
+                tbody.innerHTML = "";
+
+                if (categories.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" style="padding: 15px; text-align: center;">No categories found.</td></tr>`;
+                    return;
+                }
+
+                categories.forEach(category => {
+                    const tr = document.createElement("tr");
+                    tr.style.borderBottom = "1px solid #e5e7eb";
+                    tr.innerHTML = `
+                        <td style="padding: 12px;">#${category.id}</td>
+                        <td style="padding: 12px;">${category.name}</td>
+                        <td style="padding: 12px;">${category.slug}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error("Error loading categories:", error);
+            }
+        }
+
+        /**
+         * Handle Create Category Submission
+         */
+        document.getElementById("add-category-form").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            const token = localStorage.getItem("access_token");
+
+            const categoryData = {
+                name: document.getElementById("name").value,
+                slug: document.getElementById("slug").value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/categories/`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify(categoryData)
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail || "Failed to create category");
+
+                alert("Category created successfully!");
+                document.getElementById("add-category-form").reset();
+                loadCategories(token);
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        // Logout Handler
+        document.getElementById("logout-btn").addEventListener("click", function() {
+            localStorage.removeItem("access_token");
+            window.location.href = "login.html";
+        });
+    </script>
+</body>
+</html>
