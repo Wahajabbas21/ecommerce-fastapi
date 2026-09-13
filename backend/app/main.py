@@ -39,14 +39,23 @@ async def add_security_headers(request: Request, call_next):
     response.headers["X-XSS-Protection"] = "1; mode=block"
     return response
 
-# Exception handlers connect kiye hain
+# connect Exception handlers 
 setup_exception_handlers(app)
 
-# API routes connect kiye hain
+# connect API routes
 app.include_router(
     api_router,
     prefix="/api/v1",
 )
+
+# add root route
+@app.get("/")
+def read_root():
+    return {
+        "message": "E-commerce FastAPI backend is live and running!",
+        "docs": "/docs",
+        "health": "/health"
+    }
 
 @app.get("/health")
 def health_check():
