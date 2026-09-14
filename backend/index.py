@@ -5,6 +5,6 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app.main import app as fastapi_app
-from mangum import Mangum
+from a2wsgi import ASGIMiddleware
 
-app = Mangum(fastapi_app, lifespan="off")
+app = ASGIMiddleware(fastapi_app)
