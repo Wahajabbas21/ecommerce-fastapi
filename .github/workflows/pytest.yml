@@ -26,6 +26,13 @@ jobs:
         pip install -r requirements.txt
         pip install pytest httpx
 
+    - name: Run Database Migrations
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        cd backend
+        alembic upgrade head
+
     - name: Run Pytest
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
