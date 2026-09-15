@@ -24,14 +24,14 @@ jobs:
         python -m pip install --upgrade pip
         cd backend
         pip install -r requirements.txt
-        pip install pytest httpx
+        pip install pytest httpx alembic
 
     - name: Run Database Migrations
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
       run: |
         cd backend
-        python -m alembic upgrade head
+        alembic upgrade head
 
     - name: Run Pytest
       env:

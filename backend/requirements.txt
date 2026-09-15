@@ -24,3 +24,4 @@ requests==2.31.0
 python-multipart==0.0.9
 google-genai
 a2wsgi==1.10.0
+alembic
