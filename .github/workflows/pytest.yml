@@ -29,6 +29,7 @@ jobs:
     - name: Run Database Migrations
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
       run: |
         cd backend
         alembic upgrade head
