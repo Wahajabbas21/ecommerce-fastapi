@@ -1,4 +1,4 @@
-import pytest
+`import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 
@@ -18,7 +18,6 @@ def test_get_products():
 
 # 3. User Registration & Login Flow
 def test_user_auth_flow():
-    # Register test user
     test_email = "testregression@gmail.com"
     test_password = "SecurePassword123"
     
@@ -26,10 +25,8 @@ def test_user_auth_flow():
         "email": test_email,
         "password": test_password
     })
-    # Might be 201 or 400 if already exists
     assert reg_response.status_code in [201, 400]
 
-    # Login to get token
     login_response = client.post("/api/v1/auth/login", data={
         "username": test_email,
         "password": test_password
@@ -38,8 +35,6 @@ def test_user_auth_flow():
     data = login_response.json()
     assert "access_token" in data
     
-    # Return token for subsequent tests if needed
-    return data["access_token"]
 
 # 4. Protected Route & Order Ownership Test (Unauthorized should fail)
 def test_unauthorized_orders_access():
