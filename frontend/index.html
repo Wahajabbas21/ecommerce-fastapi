@@ -51,13 +51,16 @@
         </div>
     </div>
 
-    <!-- JavaScript files link ki gayi hain -->
-    <script src="js/api.js"></script>
-    <script src="js/products.js"></script>
+    <!-- JavaScript files linked properly (config.js included first) -->
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/products.js"></script>
 
     <!-- AI Chat Widget Logic -->
     <script>
-        const API_BASE = "http://127.0.0.1:8000";
+        // Automatically picks live Vercel backend URL from config.js
+        const resolvedBase = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL.replace(/\/api\/v1\/?$/, '') : "https://ecommerce-fastapi-liart.vercel.app";
+        const API_BASE = resolvedBase;
 
         async function sendChatMessage() {
             const inputField = document.getElementById("chat-input");
