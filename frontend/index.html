@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FastAPI E-Commerce</title>
+    <script>
+        // Agar token mojood nahi hai, toh user ko seedha login page par bhej dein
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+            window.location.href = "login.html";
+        }
+    </script>
     <style>
         body { font-family: system-ui, sans-serif; background-color: #f7f8fa; margin: 0; padding: 20px; }
         nav { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #ddd; }
